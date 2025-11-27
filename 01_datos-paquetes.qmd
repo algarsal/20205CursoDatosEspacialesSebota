@@ -1,0 +1,36 @@
+---
+title: Curso distribución espacial
+subtitle: inicio y paquetes
+author: Alfonso Garmendia
+code-fold: true
+toc: true
+toc-location: body
+execute: 
+  echo: false
+format: 
+  html: 
+    self-contained: true
+    page-layout: article
+
+---
+
+## Paquetes necesarios
+
+Los paquetes que usaremos de RStudio que se usarán son los siguientes: dplyr; raster; sf; rgbif; readr; CoordinateCleaner; units; leaflet; htmlwidgets; ggplot2 y RColorBrewer.
+
+```{r}
+library(dplyr)
+library(raster)
+library(sf)
+library(rgbif)
+library(readr)
+library(CoordinateCleaner)
+library(units)
+library(leaflet)
+library(htmlwidgets)
+library(ggplot2)
+library(RColorBrewer)
+
+
+```
+
