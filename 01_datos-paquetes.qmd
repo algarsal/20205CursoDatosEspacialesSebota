@@ -34,3 +34,183 @@ library(RColorBrewer)
 
 ```
 
+## Ponentes
+Adri y Jorge
+
+## Esquema
+
+- Gbif extraer, limpiar, 
+
+## Extraer datos de gbif
+
+Enlaces:
+
+
+```{r}
+library(rgbif)
+library(dplyr)
+library(readr)
+library(CoordinateCleaner)
+```
+
+Download species lists
+
+```{r}
+user <- "algarsal"
+pwd <- "k0x"
+email <- "algarsal@upvnet.upv.es"
+
+list_species <- c("Cortaderia selloana", 
+                  "Fagus sylvatica", 
+                  "Luzula caespitosa")
+
+
+
+```
+
+
+
+
+```{r}
+check_list <- 
+  name_backbone_checklist(list_species)
+
+gbif_taxon_keys <-
+  name_backbone_checklist(list_species) %>%
+  filter(matchType == "EXACT")  %>%
+  pull(usageKey)
+  
+```
+
+Descargar datos
+
+```{r}
+occ_download(
+  pred_in("taxonKey", gbif_taxon_keys),
+  pred_in("basisOfRecord", c('OBSERVATION',
+      'HUMAN_OBSERVATION', 'MACHINE_OBSERVATION',
+      'MATERIAL_SAMPLE', 'LITERATURE',
+      'PRESERVED_SPECIMEN')),
+  # Suitable data sources, excluded "FOSSIL_SPECIMEN", "UNKNOWN", ETC. 
+  pred("hasCoordinate", TRUE),
+  pred("hasGeospatialIssue", FALSE),
+  pred("country", "ES"), 
+  format = "SIMPLE_CSV", 
+  user = user, pwd = pwd, email = email, 
+  pred_gte("year", 1950))
+
+```
+
+Bajar los datos en el servidor en el enlace que sale. Tarda bastante. 
+
+
+## Limpiar datos
+
+```{r}
+colnames(gbif_raw)
+
+data_subset <- gbif_raw %>%
+  filter(ocurrenceStatus == "PRESENT")
+filter(coordinatePrecision < 1000 | is.na(coordinateUncertaintyInMeters))
+
+write.csv(data_subset, "data/.../...clean")
+
+```
+
+## Datos limpios
+
+```{r}
+## datos limpios
+# dir("data")
+# dir("data/data_workshop_sebot")
+clean <- read_csv("data/data_workshop_sebot/2. Data_GBIF_clean.csv")
+
+unique(clean$species)
+
+```
+
+Vamos a centrarnos en la región iberoatlántica. 
+
+Para ello vamos a cargar el shp de los datos. 
+
+```{r}
+# dir("data/data_workshop_sebot")
+library(sf)
+iberoatlantic <-
+  read_sf("data/data_workshop_sebot/IberoAtlantic_workshop.shp")
+
+plot(iberoatlantic$geometry)
+
+
+```
+
+Convertimos la tabla de datos de gbif a una tabla con coordenadas. 
+
+```{r}
+data_gbif_sf <- st_as_sf(clean, 
+    coords = c("decimalLongitude",
+               "decimalLatitude"), 
+    crs = 4326)
+# crs = coordinate reference system
+# difícil de saber cual. 
+# 4326 es para coordenadas en decimales.
+```
+
+```{r}
+plot(data_gbif_sf$geometry)
+```
+
+
+Recortar datos de observaciones, quedándonos sólo con la región iberoatlántica. 
+
+```{r}
+data_gbif_crop <- 
+  st_intersection(data_gbif_sf,
+      iberoatlantic)
+
+# Da error, por diferentes crs en cada capa. 
+st_crs(iberoatlantic)$epsg
+st_crs(data_gbif_sf)$epsg
+
+iberoatlantic <- st_transform(iberoatlantic, 4326)
+
+data_gbif_crop <- 
+  st_intersection(data_gbif_sf,
+      iberoatlantic)
+
+plot(iberoatlantic$geometry)
+plot(data_gbif_crop$geometry, add = TRUE, 
+     col = "red", alpha = 0.1)
+
+
+
+
+```
+
+
+```{r}
+library(units)
+ dir("data/data_workshop_sebot")
+# source("data/data_workshop_sebot/funcion_filtrado_distancias.R")
+# Tarda mucho esta función. Actualizar con Terra. 
+ 
+ coords <- st_coordinates(df_filtrado)
+df_filtrado_df <- as.data.frame(df.filtrado)
+
+df_filtrado_df$lon <- coord[, "X"]
+df_filtrado_df$lat <- coord[, "Y"]
+
+df_filtrado_df$geometry <- NULL
+
+write.csv(df_filtrado_df, "datos_filtrados.csv")
+st_write(df_filtrado, 
+         "datos_filtrados.shp", 
+         delete_layer = TRUE)
+
+```
+
+
+```{r}
+
+```
+
